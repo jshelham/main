@@ -160,20 +160,23 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
         /// <summary>
         /// Calculate the compliance fitness value for the strategy
         /// </summary>
+        /// <param name="strategyBase">The strategy being optimized</param>
         /// <returns>Fitness score (higher = better compliance, 100 = perfect)</returns>
-        protected override void OnCalculatePerformanceValue()
+        public override double OnCalculatePerformanceValue(StrategyBase strategyBase)
         {
             // Validate that we have trades to analyze
-            if (SystemPerformance == null || SystemPerformance.AllTrades == null || SystemPerformance.AllTrades.Count == 0)
+            if (strategyBase == null ||
+                strategyBase.SystemPerformance == null ||
+                strategyBase.SystemPerformance.AllTrades == null ||
+                strategyBase.SystemPerformance.AllTrades.Count == 0)
             {
-                Value = 0;
-                return;
+                return 0;
             }
 
             try
             {
                 // Get all trades sorted by entry time
-                var trades = SystemPerformance.AllTrades
+                var trades = strategyBase.SystemPerformance.AllTrades
                     .OrderBy(t => t.Entry.Time)
                     .ToList();
 
@@ -196,17 +199,16 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
                 // If account would have blown, return heavy negative score
                 if (drawdownPenalty >= 100)
                 {
-                    Value = -100;
-                    return;
+                    return -100;
                 }
 
-                Value = complianceScore;
+                return complianceScore;
             }
             catch (Exception ex)
             {
                 // Log error and return 0 fitness
                 NinjaTrader.Code.Output.Process($"ApexComplianceFitness Error: {ex.Message}", PrintTo.OutputTab1);
-                Value = 0;
+                return 0;
             }
         }
 

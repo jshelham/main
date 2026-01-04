@@ -160,19 +160,23 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
         /// <summary>
         /// Calculate the profitability fitness value for the strategy
         /// </summary>
-        protected override void OnCalculatePerformanceValue()
+        /// <param name="strategyBase">The strategy being optimized</param>
+        /// <returns>Fitness score (higher = better profitability within Apex rules)</returns>
+        public override double OnCalculatePerformanceValue(StrategyBase strategyBase)
         {
             // Validate that we have trades to analyze
-            if (SystemPerformance == null || SystemPerformance.AllTrades == null || SystemPerformance.AllTrades.Count == 0)
+            if (strategyBase == null ||
+                strategyBase.SystemPerformance == null ||
+                strategyBase.SystemPerformance.AllTrades == null ||
+                strategyBase.SystemPerformance.AllTrades.Count == 0)
             {
-                Value = 0;
-                return;
+                return 0;
             }
 
             try
             {
                 // Get all trades sorted by entry time
-                var trades = SystemPerformance.AllTrades
+                var trades = strategyBase.SystemPerformance.AllTrades
                     .OrderBy(t => t.Entry.Time)
                     .ToList();
 
@@ -182,8 +186,7 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
                 if (!survives)
                 {
                     // Account blown - return 0 or negative
-                    Value = -50;
-                    return;
+                    return -50;
                 }
 
                 // Calculate net profit with Apex constraints applied
@@ -222,12 +225,12 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
                                     + payoutScore
                                     + (adjustedProfitFactor * 5); // Small bonus for good profit factor
 
-                Value = fitnessScore;
+                return fitnessScore;
             }
             catch (Exception ex)
             {
                 NinjaTrader.Code.Output.Process($"ApexProfitabilityFitness Error: {ex.Message}", PrintTo.OutputTab1);
-                Value = 0;
+                return 0;
             }
         }
 

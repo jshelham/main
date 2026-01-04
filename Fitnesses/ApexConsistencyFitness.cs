@@ -155,19 +155,23 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
         /// <summary>
         /// Calculate the consistency fitness value for the strategy
         /// </summary>
-        protected override void OnCalculatePerformanceValue()
+        /// <param name="strategyBase">The strategy being optimized</param>
+        /// <returns>Fitness score (higher = more consistent, payout-eligible pattern)</returns>
+        public override double OnCalculatePerformanceValue(StrategyBase strategyBase)
         {
             // Validate that we have trades to analyze
-            if (SystemPerformance == null || SystemPerformance.AllTrades == null || SystemPerformance.AllTrades.Count == 0)
+            if (strategyBase == null ||
+                strategyBase.SystemPerformance == null ||
+                strategyBase.SystemPerformance.AllTrades == null ||
+                strategyBase.SystemPerformance.AllTrades.Count == 0)
             {
-                Value = 0;
-                return;
+                return 0;
             }
 
             try
             {
                 // Get all trades sorted by entry time
-                var trades = SystemPerformance.AllTrades
+                var trades = strategyBase.SystemPerformance.AllTrades
                     .OrderBy(t => t.Entry.Time)
                     .ToList();
 
@@ -176,8 +180,7 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
 
                 if (dailyPnL.Count == 0)
                 {
-                    Value = 0;
-                    return;
+                    return 0;
                 }
 
                 // Calculate each consistency metric (0-100 scale each)
@@ -209,12 +212,12 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
                     finalScore += 10; // Bonus for excellent consistency
                 }
 
-                Value = finalScore;
+                return finalScore;
             }
             catch (Exception ex)
             {
                 NinjaTrader.Code.Output.Process($"ApexConsistencyFitness Error: {ex.Message}", PrintTo.OutputTab1);
-                Value = 0;
+                return 0;
             }
         }
 
