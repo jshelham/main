@@ -162,7 +162,7 @@ namespace NinjaTrader.NinjaScript.OptimizationFitnesses
         /// </summary>
         /// <param name="strategyBase">The strategy being optimized</param>
         /// <returns>Fitness score (higher = better compliance, 100 = perfect)</returns>
-        public override double OnCalculatePerformanceValue(StrategyBase strategyBase)
+        protected override double OnCalculatePerformanceValue(StrategyBase strategyBase)
         {
             // Validate that we have trades to analyze
             if (strategyBase == null ||
